@@ -1,0 +1,178 @@
+CREATE TABLE IF NOT EXISTS public.paises
+(
+    codigo integer NOT NULL,
+    nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT pk_paises PRIMARY KEY (codigo)
+)
+
+CREATE TABLE IF NOT EXISTS public.departamentos
+(
+    codigo integer NOT NULL,
+    nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    cod_pais integer NOT NULL,
+    CONSTRAINT pk_departamentos PRIMARY KEY (codigo),
+    CONSTRAINT fk_departamentos_paises FOREIGN KEY (cod_pais)
+        REFERENCES public.paises (codigo) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+CREATE TABLE IF NOT EXISTS public.ciudades
+(
+    codigo integer NOT NULL,
+    nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    cod_dpto integer NOT NULL,
+    CONSTRAINT pk_ciudades PRIMARY KEY (codigo),
+    CONSTRAINT fk_ciudad_departamentos FOREIGN KEY (cod_dpto)
+        REFERENCES public.departamentos (codigo) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+
+CREATE TABLE IF NOT EXISTS public.sedes
+(
+    codigo integer NOT NULL,
+    nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    cod_ciudad integer NOT NULL,
+    CONSTRAINT pk_sedes PRIMARY KEY (codigo),
+    CONSTRAINT fk_sede_ciudades FOREIGN KEY (cod_ciudad)
+        REFERENCES public.ciudades (codigo) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+CREATE TABLE IF NOT EXISTS public.tipos_contratacion
+(
+    nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT pk_tipos_contratacion PRIMARY KEY (nombre)
+)
+
+CREATE TABLE IF NOT EXISTS public.tipos_empleados
+(
+    nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT pk_tipos_empleados PRIMARY KEY (nombre)
+)
+
+CREATE TABLE IF NOT EXISTS public.facultades
+(
+    codigo integer NOT NULL,
+    nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    ubicacion character varying(15) COLLATE pg_catalog."default" NOT NULL,
+    nro_telefono character varying(15) COLLATE pg_catalog."default" NOT NULL,
+    id_decano character varying(15) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT pk_facultades PRIMARY KEY (codigo),
+    CONSTRAINT fk_facultades_empleados FOREIGN KEY (id_decano)
+        REFERENCES public.empleados (identificacion) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+CREATE INDEX facultades_idx
+    ON public.facultades USING btree
+    (id_decano ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+
+CREATE TABLE IF NOT EXISTS public.areas
+(
+    codigo integer NOT NULL,
+    nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    facultades_codigo integer NOT NULL,
+    id_coordinador character varying(15) COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT pk_areas PRIMARY KEY (codigo),
+    CONSTRAINT fk_areas_empleados FOREIGN KEY (id_coordinador)
+        REFERENCES public.empleados (identificacion) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT fk_areas_facultades FOREIGN KEY (facultades_codigo)
+        REFERENCES public.facultades (codigo) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+CREATE INDEX areas_idx
+    ON public.areas USING btree
+    (id_coordinador ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+CREATE TABLE IF NOT EXISTS public.programas
+(
+    codigo integer NOT NULL,
+    nombre character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    areas_codigo integer NOT NULL,
+    CONSTRAINT pk_programas PRIMARY KEY (codigo),
+    CONSTRAINT fk_programas_areas FOREIGN KEY (areas_codigo)
+        REFERENCES public.areas (codigo) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+CREATE TABLE IF NOT EXISTS public.empleados
+(
+    identificacion character varying(15) COLLATE pg_catalog."default" NOT NULL,
+    nombres character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    apellidos character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(30) COLLATE pg_catalog."default" NOT NULL,
+    tipo_contratacion character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    tipo_empleado character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    cod_facultad integer NOT NULL,
+    cod_sede integer NOT NULL,
+    lugar_nacimiento integer NOT NULL,
+    CONSTRAINT pk_empleados PRIMARY KEY (identificacion),
+    CONSTRAINT fk_empleados_ciudades FOREIGN KEY (lugar_nacimiento)
+        REFERENCES public.ciudades (codigo) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT fk_empleados_facultades FOREIGN KEY (cod_facultad)
+        REFERENCES public.facultades (codigo) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT fk_empleados_sedes FOREIGN KEY (cod_sede)
+        REFERENCES public.sedes (codigo) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT fk_empleados_tipos_contratacion FOREIGN KEY (tipo_contratacion)
+        REFERENCES public.tipos_contratacion (nombre) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT fk_empleados_tipos_empleado FOREIGN KEY (tipo_empleado)
+        REFERENCES public.tipos_empleados (nombre) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+
+
+
+insert into tipos_contratacion (nombre) values ('CARRERA ADMINISTRATIVA');
+insert into tipos_contratacion (nombre) values ('CARRERA DOCENTE');
+
+insert into tipos_empleados (nombre) values ('ADMINISTRATIVO');
+insert into tipos_empleados (nombre) values ('DOCENTE');
+
+insert into empleados (identificacion,nombres,apellidos,email,tipo_contratacion,tipo_empleado,cod_facultad,cod_sede,lugar_nacimiento) values (10,'LUZ','LOPEZ','LMLOPEZ@ELPOLI.EDU.CO','CARRERA ADMINISTRATIVA','ADMINISTRATIVO', 1,1,1);
+insert into empleados (identificacion,nombres,apellidos,email,tipo_contratacion,tipo_empleado,cod_facultad,cod_sede,lugar_nacimiento) values (11,'JOSE LEONARDO','RAMIREZ','JOSERAMIREZ@ELPOLI.EDU.CO','LIBRE NOMBRAMIENTO','ADMINISTRATIVO', 1,1,1);
+
+insert into areas (codigo,nombre,facultades_codigo) values (1, 'APIT', 1); 
+
+insert into PROGRAMAS (codigo,nombre,areas_codigo) values (15,'INGENIERIA INFORMATICA', 1);
+
+
+insert into facultades (codigo,nombre,ubicacion,nro_telefono) values (1,'INGENIERIA', 'P38-203','3197906');
+
+insert into sedes (codigo,nombre,cod_ciudad) values (1, 'POBLADO', 1);
+
+
+select * from areas;
+select * from ciudades;
+select * from departamentos;
+select * from empleados;
+select * from facultades;
+select * from paises;
+select * from programas;
+select * from sedes;
+select * from tipos_contratacion;
+select * from tipos_empleados te ;
+
+
+
